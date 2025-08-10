@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ITUNE VERSION</title>
+<style>
+  /* Basic Reset */
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    user-select: none;
+    background: #f0f0f0;
+    color: #222;
+    overflow: hidden;
+    transition: background 0.3s, color 0.3s;
+  }
+  body.dark {
+    background: #121212;
+    color: #eee;
+  }
+  /* Layout */
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+  /* Sidebar */
+  .sidebar {
+    width: 260px;
+    background: #eaeaea;
+    border-right: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 15px;
+    transition: background 0.3s, color 0.3s;
+  }
+  body.dark .sidebar {
+    background: #1f1f1f;
+    border-color: #444;
+  }
+  .sidebar h1 {
+    margin: 0 0 20px 0;
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+  }
+  .playlist-list {
+    flex-grow: 1;
+    overflow-y: auto;
+  }
+  .playlist-list button {
+    width: 100%;
+    text-align: left;
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    transition: background 0.2s;
+  }
+  .playlist-list button:hover,
+  .playlist-list button.active {
+    background: #333;
+    color: #fff;
+  }
+  /* Content Area */
+  .content {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    transition: background 0.3s, color 0.3s;
+  }
+  body.dark .content {
+    background: #222;
+  }
+  /* Top Bar */
+  .topbar {
+    padding: 12px 20px;
+    border-bottom: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  body.dark .topbar {
+    border-color: #444;
+  }
+  #searchInput {
+    flex-grow: 1;
+    padding: 8px 15px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  #searchInput:focus {
+    border-color: #666;
+  }
+  body.dark #searchInput {
+    background: #444;
+    border-color: #666;
+    color: #eee;
+  }
+  /* Buttons */
+  button {
+    background: #555;
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s;
+  }
+  button:hover {
+    background: #333;
+  }
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    flex-grow: 1;
+    display: block;
+    overflow-y: auto;
+    height: calc(100% - 56px);
+  }
+  thead {
+    background: #ddd;
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    font-weight: 700;
+  }
+  body.dark thead {
+    background: #444;
+    color: #eee;
+  }
+  tbody {
+    display: block;
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+    width: 100%;
+  }
+  tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  tbody tr:hover {
+    background: #bbb;
+  }
+  body.dark tbody tr:hover {
+    background: #333;
+  }
+  tbody tr.selected {
+    background: #999;
+    font-weight: 700;
+  }
+  body.dark tbody tr.selected {
+    background: #666;
+  }
+  th, td {
+    padding: 12px 10px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    text-align: left;
+  }
+  th.name, td.name { width: 40%; }
+  th.artist, td.artist { width: 30%; }
+  th.duration, td.duration { width: 15%; text-align: right; padding-right: 15px; }
+  /* Playback Bar */
+  .playback-bar {
+    height: 90px;
+    background: #eee;
+    border-top: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 20px;
+    transition: background 0.3s, color 0.3s;
+  }
+  body.dark .playback-bar {
+    background: #121212;
+    border-color: #444;
+    color: #eee;
+  }
+  .playback-info {
+    flex-grow: 1;
+    overflow: hidden;
+  }
+  .playback-title {
+    font-weight: 700;
+    font-size: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .playback-artist {
+    font-size: 14px;
+    color: #666;
+  }
+  body.dark .playback-artist {
+    color: #aaa;
+  }
+  .playback-controls button {
+    font-size: 24px;
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.3s;
+  }
+  .playback-controls button:hover {
+    color: #555;
+  }
+  /* Mini Player */
+  #miniPlayer {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 320px;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    display: none;
+    user-select: none;
+    transition: background 0.3s, color 0.3s;
+    z-index: 1000;
+  }
+  body.dark #miniPlayer {
+    background: #222;
+    border-color: #444;
+    color: #eee;
+  }
+  #miniPlayerHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  #miniPlayerHeader button {
+    font-weight: 700;
+  }
+  #miniPlayerControls button {
+    font-size: 20px;
+    margin-right: 12px;
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+  }
+  #miniPlayerControls button:hover {
+    color: #555;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="main">
+    <div class="sidebar">
+      <h1>ITUNE VERSION</h1>
+      <button id="btnAllSongs" class="active">All Songs</button>
+      <div class="playlist-list" id="playlistList"></div>
+      <input type="text" id="newPlaylistName" placeholder="New Playlist Name" style="margin-top:10px; padding:8px 12px; border-radius: 15px; border:1px solid #ccc; width: 100%; box-sizing: border-box;" />
+      <button id="btnCreatePlaylist" style="margin-top:8px;">Create Playlist</button>
+      <button id="btnToggleTheme" style="margin-top: 20px;">Toggle Dark Mode</button>
+      <button id="btnToggleMiniPlayer" style="margin-top: 20px;">Toggle Mini Player</button>
+    </div>
+    <div class="content">
+      <div class="topbar">
+        <input type="search" id="searchInput" placeholder="Search songs..." />
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th class="name">Name</th>
+            <th class="artist">Artist</th>
+            <th class="duration">Duration</th>
+          </tr>
+        </thead>
+        <tbody id="songList"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="playback-bar">
+    <div class="playback-info">
+      <div class="playback-title" id="playbackTitle">No song playing</div>
+      <div class="playback-artist" id="playbackArtist"></div>
+    </div>
+    <div class="playback-controls">
+      <button id="btnPrev" title="Previous">&#9664;&#9664;</button>
+      <button id="btnPlayPause" title="Play/Pause">&#9654;</button>
+      <button id="btnNext" title="Next">&#9654;&#9654;</button>
+    </div>
+    <input type="range" id="seekBar" min="0" max="100" value="0" style="width: 200px; margin-left: 20px;"/>
+    <span id="currentTime" style="width: 40px; text-align:right;">0:00</span> / <span id="durationTime" style="width: 40px;">0:00</span>
+  </div>
+</div>
+
+<div id="miniPlayer">
+  <div id="miniPlayerHeader">
+    <span id="miniTitle">No song</span>
+    <button id="closeMini">X</button>
+  </div>
+  <div id="miniPlayerControls">
+    <button id="miniPrev" title="Previous">&#9664;&#9664;</button>
+    <button id="miniPlayPause" title="Play/Pause">&#9654;</button>
+    <button id="miniNext" title="Next">&#9654;&#9654;</button>
+  </div>
+</div>
+
+<audio id="audioPlayer"></audio>
+
+<script>
+  const API_KEY = 'AIzaSyDsYE91wH7UDwu8eZNbD1CFuVcilgYeZhI';
+  const FOLDER_ID = '1DGz9zEQh29EAqTZpmWK5mwSj5HComnkn';
+
+  const audio = document.getElementById('audioPlayer');
+  const songListElem = document.getElementById('songList');
+  const searchInput = document.getElementById('searchInput');
+  const btnAllSongs = document.getElementById('btnAllSongs');
+  const playlistListElem = document.getElementById('playlistList');
+  const newPlaylistNameInput = document.getElementById('newPlaylistName');
+  const btnCreatePlaylist = document.getElementById('btnCreatePlaylist');
+  const btnToggleTheme = document.getElementById('btnToggleTheme');
+  const btnToggleMiniPlayer = document.getElementById('btnToggleMiniPlayer');
+
+  const playbackTitle = document.getElementById('playbackTitle');
+  const playbackArtist = document.getElementById('playbackArtist');
+  const btnPrev = document.getElementById('btnPrev');
+  const btnPlayPause = document.getElementById('btnPlayPause');
+  const btnNext = document.getElementById('btnNext');
+  const seekBar = document.getElementById('seekBar');
+  const currentTimeElem = document.getElementById('currentTime');
+  const durationTimeElem = document.getElementById('durationTime');
+
+  const miniPlayer = document.getElementById('miniPlayer');
+  const miniTitle = document.getElementById('miniTitle');
+  const closeMiniBtn = document.getElementById('closeMini');
+  const miniPrev = document.getElementById('miniPrev');
+  const miniPlayPause = document.getElementById('miniPlayPause');
+  const miniNext = document.getElementById('miniNext');
+
+  let songs = [];
+  let filteredSongs = [];
+  let currentSongIndex = -1;
+  let playlists = JSON.parse(localStorage.getItem('itune_playlists') || '{}');
+  let currentPlaylist = null;
+  let isPlaying = false;
+
+  // Helpers
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  // Load songs from Google Drive
+  async function fetchSongs(pageToken = '') {
+    let allFiles = [];
+    let token = pageToken;
+    do {
+      const q = encodeURIComponent(`'${FOLDER_ID}' in parents and (mimeType contains 'audio/')`);
+      const url = `https://www.googleapis.com/drive/v3/files?key=${API_KEY}&q=${q}&fields=nextPageToken,files(id,name,mimeType)&pageSize=100${token ? `&pageToken=${token}` : ''}`;
+      const res = await fetch(url);
+      if(!res.ok) throw new Error(`Drive API Error: ${res.status}`);
+      const data = await res.json();
+      allFiles = allFiles.concat(data.files);
+      token = data.nextPageToken || '';
+    } while(token);
+    return allFiles;
+  }
+
+  function createSongURL(id) {
+    return `https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${API_KEY}`;
+  }
+
+  // Render songs table
+  function renderSongs(songsToRender) {
+    songListElem.innerHTML = '';
+    songsToRender.forEach((song, i) => {
+      const tr = document.createElement('tr');
+      tr.className = (i === currentSongIndex) ? 'selected' : '';
+      tr.innerHTML = `
+        <td class="name" title="${song.name}">${song.name}</td>
+        <td class="artist" title="${song.artist || 'Unknown'}">${song.artist || 'Unknown'}</td>
+        <td class="duration" title="${formatTime(song.duration || 0)}">${formatTime(song.duration || 0)}</td>
+      `;
+      tr.onclick = () => playSong(i);
+      songListElem.appendChild(tr);
+    });
+  }
+
+  // Play a song
+  function playSong(index) {
+    if (index < 0 || index >= filteredSongs.length) return;
+    currentSongIndex = index;
+    const song = filteredSongs[index];
+    audio.src = createSongURL(song.id);
+    audio.play();
+    isPlaying = true;
+    updatePlaybackUI();
+    renderSongs(filteredSongs);
+  }
+
+  // Update playback info and buttons
+  function updatePlaybackUI() {
+    const song = filteredSongs[currentSongIndex];
+    if (!song) {
+      playbackTitle.textContent = 'No song playing';
+      playbackArtist.textContent = '';
+      btnPlayPause.textContent = '▶';
+      miniTitle.textContent = 'No song';
+      return;
+    }
+    playbackTitle.textContent = song.name;
+    playbackArtist.textContent = song.artist || 'Unknown Artist';
+    btnPlayPause.textContent = isPlaying ? '⏸' : '▶';
+    miniTitle.textContent = song.name;
+    miniPlayPause.textContent = isPlaying ? '⏸' : '▶';
+  }
+
+  // Play/Pause toggle
+  function togglePlayPause() {
+    if (!audio.src) return;
+    if (audio.paused) {
+      audio.play();
+      isPlaying = true;
+    } else {
+      audio.pause();
+      isPlaying = false;
+    }
+    updatePlaybackUI();
+  }
+
+  // Next/Prev song
+  function nextSong() {
+    if(filteredSongs.length === 0) return;
+    currentSongIndex = (currentSongIndex + 1) % filteredSongs.length;
+    playSong(currentSongIndex);
+  }
+  function prevSong() {
+    if(filteredSongs.length === 0) return;
+    currentSongIndex = (currentSongIndex - 1 + filteredSongs.length) % filteredSongs.length;
+    playSong(currentSongIndex);
+  }
+
+  // Seek bar update
+  function updateSeekBar() {
+    if(audio.duration) {
+      const percent = (audio.currentTime / audio.duration) * 100;
+      seekBar.value = percent;
+      currentTimeElem.textContent = formatTime(audio.currentTime);
+      durationTimeElem.textContent = formatTime(audio.duration);
+    }
+  }
+
+  // Seek song when user moves the slider
+  seekBar.addEventListener('input', () => {
+    if(audio.duration) {
+      audio.currentTime = (seekBar.value / 100) * audio.duration;
+    }
+  });
+
+  // Search filtering
+  searchInput.addEventListener('input', () => {
+    const val = searchInput.value.toLowerCase();
+    filteredSongs = songs.filter(s => s.name.toLowerCase().includes(val));
+    currentSongIndex = -1;
+    renderSongs(filteredSongs);
+    updatePlaybackUI();
+  });
+
+  // Play all songs view
+  btnAllSongs.addEventListener('click', () => {
+    currentPlaylist = null;
+    filteredSongs = [...songs];
+    currentSongIndex = -1;
+    renderSongs(filteredSongs);
+    updatePlaybackUI();
+    btnAllSongs.classList.add('active');
+    Array.from(playlistListElem.children).forEach(btn => btn.classList.remove('active'));
+  });
+
+  // Playlist feature
+  function savePlaylists() {
+    localStorage.setItem('itune_playlists', JSON.stringify(playlists));
+  }
+
+  function renderPlaylists() {
+    playlistListElem.innerHTML = '';
+    for (const [name, songIds] of Object.entries(playlists)) {
+      const btn = document.createElement('button');
+      btn.textContent = name;
+      btn.onclick = () => {
+        currentPlaylist = name;
+        filteredSongs = songs.filter(s => songIds.includes(s.id));
+        currentSongIndex = -1;
+        renderSongs(filteredSongs);
+        updatePlaybackUI();
+        btnAllSongs.classList.remove('active');
+        Array.from(playlistListElem.children).forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      };
+      playlistListElem.appendChild(btn);
+    }
+  }
+
+  btnCreatePlaylist.onclick = () => {
+    const name = newPlaylistNameInput.value.trim();
+    if (!name) {
+      alert('Please enter a playlist name');
+      return;
+    }
+    if (playlists[name]) {
+      alert('Playlist name already exists');
+      return;
+    }
+    playlists[name] = [];
+    savePlaylists();
+    renderPlaylists();
+    newPlaylistNameInput.value = '';
+  };
+
+  // Drag and Drop to add songs to playlist
+  songListElem.addEventListener('dragstart', e => {
+    if(e.target.tagName !== 'TR') return;
+    e.dataTransfer.setData('text/plain', e.target.rowIndex - 1); // Adjust for header
+  });
+
+  playlistListElem.addEventListener('dragover', e => {
+    e.preventDefault();
+  });
+
+  playlistListElem.addEventListener('drop', e => {
+    e.preventDefault();
+    if (!currentPlaylist) {
+      alert('Select a playlist first to add songs');
+      return;
+    }
+    const songIndex = Number(e.dataTransfer.getData('text/plain'));
+    if (isNaN(songIndex) || songIndex < 0 || songIndex >= filteredSongs.length) return;
+    const song = filteredSongs[songIndex];
+    if (!playlists[currentPlaylist].includes(song.id)) {
+      playlists[currentPlaylist].push(song.id);
+      savePlaylists();
+      alert(`Added "${song.name}" to "${currentPlaylist}"`);
+    } else {
+      alert(`"${song.name}" is already in "${currentPlaylist}"`);
+    }
+  });
+
+  // Playback controls
+  btnPlayPause.addEventListener('click', togglePlayPause);
+  btnPrev.addEventListener('click', prevSong);
+  btnNext.addEventListener('click', nextSong);
+  audio.addEventListener('timeupdate', updateSeekBar);
+  audio.addEventListener('ended', nextSong);
+
+  // Mini player controls
+  btnToggleMiniPlayer.addEventListener('click', () => {
+    if (miniPlayer.style.display === 'block') {
+      miniPlayer.style.display = 'none';
+    } else {
+      miniPlayer.style.display = 'block';
+    }
+  });
+  closeMiniBtn.addEventListener('click', () => {
+    miniPlayer.style.display = 'none';
+  });
+  miniPlayPause.addEventListener('click', togglePlayPause);
+  miniPrev.addEventListener('click', prevSong);
+  miniNext.addEventListener('click', nextSong);
+
+  // Dark mode toggle
+  btnToggleTheme.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+  });
+
+  // Initialize app
+  async function init() {
+    try {
+      songs = await fetchSongs();
+      // Add dummy artist and duration (duration requires loading metadata, so skipping)
+      songs = songs.map(s => ({ ...s, artist: 'Unknown Artist', duration: 0 }));
+      filteredSongs = [...songs];
+      renderSongs(filteredSongs);
+      renderPlaylists();
+    } catch (err) {
+      alert('Failed to load songs: ' + err.message);
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
